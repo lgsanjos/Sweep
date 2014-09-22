@@ -1,4 +1,6 @@
+import java.util.regex.Pattern
 apply plugin: 'com.android.application'
+
 
 android {
     compileSdkVersion  18
@@ -11,13 +13,40 @@ android {
         versionCode 1
         versionName "1.0"
     }
+
+    signingConfigs {
+        release {
+            storeFile file("../.keystore")
+            storePassword "KgND39N1"
+            keyAlias "sweepme"
+            keyPassword "KgND39N1"
+        }
+    }
+
     buildTypes {
         release {
             runProguard false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.release
+
+            println "Increasing the version code"
+            def manifestFile = file("src/main/AndroidManifest.xml")
+            def pattern = Pattern.compile("versionCode=\"(\\d+)\"")
+            def manifestText = manifestFile.getText()
+            def matcher = pattern.matcher(manifestText)
+            matcher.find()
+            def versionCode = Integer.parseInt(matcher.group(1))
+
+            println "Old version: " + versionCode
+            def manifestContent = matcher.replaceAll("versionCode=\"" + ++versionCode + "\"")
+            println "Release version: " + versionCode
+
+            manifestFile.write(manifestContent)
         }
     }
+
 }
+
 
 dependencies {
     provided 'com.squareup.dagger:dagger-compiler:1.2.1'
